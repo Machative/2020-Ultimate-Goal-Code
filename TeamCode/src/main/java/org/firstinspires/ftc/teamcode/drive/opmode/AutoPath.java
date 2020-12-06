@@ -15,6 +15,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
+import java.util.HashMap;
 import java.util.List;
 
 /*
@@ -52,12 +53,32 @@ public class AutoPath extends OpMode {
 
     //Set A Trajectories
     Trajectory t_A_0, t_A_1, t_A_2, t_A_3, t_A_4;
+    Trajectory[] t_A_set = {t_A_0, t_A_1, t_A_2, t_A_3, t_A_4};
     //Set B Trajectories
-    Trajectory t_B_0, t_B_1, t_B_2, t_B_3;
+    Trajectory t_B_0, t_B_1, t_B_2, t_B_3, t_B_4;
+    Trajectory[] t_B_set = {t_B_0, t_B_1, t_B_2, t_B_3, t_B_4};
     //Set C Trajectories
-    Trajectory t_C_0, t_C_1, t_C_2, t_C_3;
+    Trajectory t_C_0, t_C_1, t_C_2, t_C_3, t_C_4;
+    Trajectory[] t_C_set = {t_C_0, t_C_1, t_C_2, t_C_3, t_C_4};
+
+    enum State {
+        t0,
+        t1,
+        t2,
+        t3,
+        t4,
+        IDLE
+    }
+
+    enum Set {
+        A,
+        B,
+        C,
+        UNKNOWN
+    }
 
     State currentState = State.IDLE;
+    Set set = Set.UNKNOWN;
     Pose2d startPose = new Pose2d(-63, -48, 0);
 
     @Override
@@ -77,7 +98,7 @@ public class AutoPath extends OpMode {
         drive.setPoseEstimate(startPose);
         initTrajectories();
 
-        currentState=State.t_A_0;
+        currentState=State.t0;
     }
 
     @Override
@@ -92,36 +113,88 @@ public class AutoPath extends OpMode {
         }
         telemetry.addData("Num Rings: ",numRings);
         telemetry.update();
+        if(numRings==0) set = Set.A;
+        else if(numRings==1) set = Set.B;
+        else if(numRings==4) set = Set.C;
     }
 
     @Override
     public void loop() {
         switch(currentState){
-            case t_A_0:
+            case t0:
                 if(!drive.isBusy() && !started){
-                    drive.followTrajectoryAsync(t_A_0);
+                    switch(set){
+                        case A:
+                            drive.followTrajectoryAsync(t_A_0);
+                            break;
+                        case B:
+                            drive.followTrajectoryAsync(t_B_0);
+                            break;
+                        case C:
+                            drive.followTrajectoryAsync(t_C_0);
+                            break;
+                    }
                     started=true;
-                }
-                if(!drive.isBusy() && started){
-                    currentState = State.t_A_1;
-                    drive.followTrajectoryAsync(t_A_1);
+                }else if(!drive.isBusy()){
+                    currentState = State.t1;
+                    switch(set){
+                        case A:
+                            drive.followTrajectoryAsync(t_A_1);
+                            break;
+                        case B:
+                            drive.followTrajectoryAsync(t_B_1);
+                            break;
+                        case C:
+                            drive.followTrajectoryAsync(t_C_1);
+                            break;
+                    }
                 }break;
-            case t_A_1:
+            case t1:
                 if(!drive.isBusy()){
-                    currentState = State.t_A_2;
-                    drive.followTrajectoryAsync(t_A_2);
+                    currentState = State.t2;
+                    switch(set){
+                        case A:
+                            drive.followTrajectoryAsync(t_A_2);
+                            break;
+                        case B:
+                            drive.followTrajectoryAsync(t_B_2);
+                            break;
+                        case C:
+                            drive.followTrajectoryAsync(t_C_2);
+                            break;
+                    }
                 }break;
-            case t_A_2:
+            case t2:
                 if(!drive.isBusy()){
-                    currentState = State.t_A_3;
-                    drive.followTrajectoryAsync(t_A_3);
+                    currentState = State.t3;
+                    switch(set){
+                        case A:
+                            drive.followTrajectoryAsync(t_A_3);
+                            break;
+                        case B:
+                            drive.followTrajectoryAsync(t_B_3);
+                            break;
+                        case C:
+                            drive.followTrajectoryAsync(t_C_3);
+                            break;
+                    }
                 }break;
-            case t_A_3:
+            case t3:
                 if(!drive.isBusy()){
-                    currentState = State.t_A_4;
-                    drive.followTrajectoryAsync(t_A_4);
+                    currentState = State.t4;
+                    switch(set){
+                        case A:
+                            drive.followTrajectoryAsync(t_A_4);
+                            break;
+                        case B:
+                            drive.followTrajectoryAsync(t_B_4);
+                            break;
+                        case C:
+                            drive.followTrajectoryAsync(t_C_4);
+                            break;
+                    }
                 }break;
-            case t_A_4:
+            case t4:
                 if(!drive.isBusy()){
                     currentState = State.IDLE;
                 }break;
@@ -130,24 +203,6 @@ public class AutoPath extends OpMode {
         }
         drive.update();
     }
-
-    enum State {
-        t_A_0,
-        t_A_1,
-        t_A_2,
-        t_A_3,
-        t_A_4,
-        t_B_0,
-        t_B_1,
-        t_B_2,
-        t_B_3,
-        t_C_0,
-        t_C_1,
-        t_C_2,
-        t_C_3,
-        IDLE
-    }
-
 
     public void initTrajectories() {
         //------------------------ 0 Rings -> Zone A -> Set A ------------------------
@@ -171,6 +226,7 @@ public class AutoPath extends OpMode {
                 .splineTo(new Vector2d(0,-36),0)
                 .build();
         //Move to parking line
+        //Shoot Rings
         t_A_4 = drive.trajectoryBuilder(t_A_3.end())
                 .lineTo(new Vector2d(10, -36))
                 .build();
@@ -198,6 +254,11 @@ public class AutoPath extends OpMode {
         t_B_3 = drive.trajectoryBuilder(t_B_2.end())
                 .splineTo(new Vector2d(0,-36),0)
                 .build();
+        //Shoot Rings
+        //Move to parking line
+        t_B_4 = drive.trajectoryBuilder(t_A_3.end())
+                .lineTo(new Vector2d(10, -36))
+                .build();
 
         //------------------------ 4 Rings -> Zone C -> Set C ------------------------
         //Move from starting position to zone A with preloaded Wobble Goal
@@ -220,6 +281,10 @@ public class AutoPath extends OpMode {
                 .splineTo(new Vector2d(0,-36),0)
                 .build();
         //Shoot Rings
+        //Move to parking line
+        t_C_4 = drive.trajectoryBuilder(t_A_3.end())
+                .lineTo(new Vector2d(10, -36))
+                .build();
     }
 
     /*@Override
