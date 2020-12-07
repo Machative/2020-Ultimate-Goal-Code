@@ -90,20 +90,14 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     //Motors
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
-    public DcMotorEx shooterLeft;
-    public DcMotorEx shooterRight;
+    public DcMotorEx shooter;
     public DcMotorEx lateralIntake;
+    public DcMotorEx intakeRunner;
     public DcMotorEx wobbleGrabberArm;
     private List<DcMotorEx> motors;
 
     //Servos
-    public CRServo wobbleGrabber;
-    public CRServo ringElevatorDriver;
-    public CRServo ringPusher;
-    //public CRServo shooterStringLeft;
-    //public CRServo shooterStringRight;
-    public Servo ringGrabber;
-    public Servo elevatorSupport;
+    public Servo wobbleGrabber;
 
     //Limit Switch
     public DigitalChannel elevatorSwitch;
@@ -148,23 +142,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         rightFront = hardwareMap.get(DcMotorEx.class, "front_right");
 
         lateralIntake = hardwareMap.get(DcMotorEx.class, "lateral_intake");
+        intakeRunner = hardwareMap.get(DcMotorEx.class, "intake_runner");
         wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
-        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooter_left");
-        shooterRight = hardwareMap.get(DcMotorEx.class, "shooter_right");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
 
-        wobbleGrabber = hardwareMap.get(CRServo.class, "wobble_grabber");
-        ringElevatorDriver = hardwareMap.get(CRServo.class, "ring_elevator");
-        ringPusher = hardwareMap.get(CRServo.class,"ring_pusher");
-        //shooterStringLeft = hardwareMap.get(CRServo.class, "shooter_string_left");
-        //shooterStringRight = hardwareMap.get(CRServo.class, "shooter_string_right");
+        wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
+        wobbleGrabber.setPosition(1);
 
-        ringGrabber = hardwareMap.get(Servo.class, "ring_grabber");
-        elevatorSupport = hardwareMap.get(Servo.class, "elevator_support");
-
-        elevatorSwitch = hardwareMap.get(DigitalChannel.class, "elevator_switch");
-        elevatorSwitch.setMode(DigitalChannel.Mode.INPUT);
-
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, lateralIntake, wobbleGrabberArm, shooterLeft, shooterRight);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, lateralIntake, wobbleGrabberArm, intakeRunner, shooter);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -174,8 +159,6 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         if (RUN_USING_ENCODER) {
             setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -395,30 +378,29 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    public void setShooterSpeed(float speed){
-        double maxspeed = (1780 / 60) * 103.6;
-        shooterLeft.setVelocity(speed * maxspeed);
-        shooterRight.setVelocity(speed * maxspeed);
+    public void shooterOn(){
+        shooter.setPower(1);
+    }
+    public void toggleShooter(){
+        shooter.setPower(1-shooter.getPower());
+    }
+    public void intakeOn(){
+        intakeRunner.setPower(0.5);
+        lateralIntake.setPower(1);
+    }
+    public void toggleIntake(){
+        intakeRunner.setPower(0.5-intakeRunner.getPower());
+        lateralIntake.setPower(1-lateralIntake.getPower());
     }
 
     //Wobble Grabber
     public void setWobbleGrabberArmPosition(int pos){
-        if(pos==0){//in robot
-            wobbleGrabberArm.setTargetPosition(-15);
-            wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            wobbleGrabberArm.setPower(1);
-        }else if(pos==1){//straight up
-            wobbleGrabberArm.setTargetPosition(-160);
-            wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            wobbleGrabberArm.setPower(1);
-        }else if(pos==2){//straight out
-            wobbleGrabberArm.setTargetPosition(-570);
-            wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            wobbleGrabberArm.setPower(1);
-        }else{
-            wobbleGrabberArm.setPower(0);
-            wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        }
+        wobbleGrabberArm.setTargetPosition(pos);
+        wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        wobbleGrabberArm.setPower(1);
+    }
+    public void setWobbleGrabberArmPower(int pow){
+        wobbleGrabberArm.setPower(pow);
     }
     @NonNull
     @Override

@@ -21,12 +21,14 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 public class Teleop extends LinearOpMode {
     //Gamepad 2 Timers
     public static long atimer=0;
+    public static long xtimer=0;
+    public static long ytimer=0;
 
     float shooterpower=0.0f;
 
     public static double speed=25.0;
     public static boolean manualWobbleArm=false;
-    public static int wobbleArmPos=0;
+    public static int wobbleArmPos=-70;
     public static int direction=0;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -47,52 +49,39 @@ public class Teleop extends LinearOpMode {
             drive.setDrivePowers(lx,-ly,rx,-ry);
 
             //Mechanism Controls
-            float wobble = gamepad2.right_stick_x; //Tighten/Loosen Wobble Grabber Servo
+            boolean wobbleGrab = gamepad2.y;//Wobble Grabber Servo
             float wobblearm = gamepad2.right_stick_y; //Manually adjust Wobble Grabber Arm
-            boolean wobblearmpos = gamepad2.a;//Toggle Wobble Arm Position
-            boolean liftUp = gamepad2.dpad_up; //Raise Ring Lift
-            boolean liftDown = gamepad2.dpad_down; //Lower Ring Lift
-            //float shooterangle = -gamepad2.left_stick_x; //Adjust Shooter Angle
+            boolean wobblearmpos = gamepad2.a;
+            boolean shooterAndIntake = gamepad2.x;//Toggle Shooter and Intake
             float shooter = gamepad2.left_stick_y;//Adjust Shooter Speed
 
-            telemetry.addData("current pos: ",drive.wobbleGrabberArm.getCurrentPosition());
-            telemetry.update();
-
             //Tighten/Loosen Wobble Grabber Servo
-            drive.wobbleGrabber.setPower(wobble);
+            if(wobbleGrab && System.currentTimeMillis()-ytimer>500){
+                drive.wobbleGrabber.setPosition(1-drive.wobbleGrabber.getPosition());
+                ytimer = System.currentTimeMillis();
+            }
 
-            /*//Adjust Shooter Angle
-            drive.shooterStringLeft.setPower(shooterangle);
-            drive.shooterStringRight.setPower(shooterangle);*/
-
-            //Adjust Shooter Speed
-            drive.setShooterSpeed(shooter);
+            //Toggle Shooter and Intake
+            if(shooterAndIntake && System.currentTimeMillis()-xtimer>500){
+                drive.toggleShooter();
+                drive.toggleIntake();
+                xtimer = System.currentTimeMillis();
+            }
 
             //Toggle Wobble Grabber Arm Position
             if(wobblearmpos && System.currentTimeMillis()-atimer>250){
                 manualWobbleArm=false;
-                if(wobbleArmPos==0) {wobbleArmPos=1;direction=0;}
-                else if(wobbleArmPos==1 && direction==0) wobbleArmPos=2;
-                else if(wobbleArmPos==1 && direction==1) wobbleArmPos=0;
-                else if(wobbleArmPos==2) {wobbleArmPos=1;direction=1;}
+                if(wobbleArmPos==-70) wobbleArmPos=-700;
+                else if(wobbleArmPos==-700) wobbleArmPos=-70;
                 atimer=System.currentTimeMillis();
             }
             if(!manualWobbleArm) drive.setWobbleGrabberArmPosition(wobbleArmPos);
 
             //Manual Wobble Grabber Arm Control
-            if(wobblearm < -0.1 || wobblearm > 0.1){
-                manualWobbleArm=true;
-                drive.wobbleGrabberArm.setTargetPosition(drive.wobbleGrabberArm.getCurrentPosition()+(int)(wobblearm*speed));
+            if(wobblearm < -0.1 || wobblearm > 0.1) {
+                manualWobbleArm = true;
+                drive.wobbleGrabberArm.setTargetPosition(drive.wobbleGrabberArm.getCurrentPosition() + (int) (wobblearm * speed));
                 drive.wobbleGrabberArm.setPower(1);
-            }
-
-            //Ring Elevator Control
-            if(liftUp) {
-                drive.ringElevatorDriver.setPower(0.5);
-            }else if(liftDown){
-                drive.ringElevatorDriver.setPower(-0.5);
-            }else{
-                drive.ringElevatorDriver.setPower(0);
             }
         }
     }
