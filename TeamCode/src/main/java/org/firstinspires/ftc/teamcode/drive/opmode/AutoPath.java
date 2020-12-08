@@ -133,10 +133,9 @@ public class AutoPath extends OpMode {
             case t0:
                 if(!drive.isBusy()){//Once driven to zone
                     currentState = State.firstWobbleDrop;
-                    timer=System.currentTimeMillis();
                 }break;
             case firstWobbleDrop:
-                if(System.currentTimeMillis()-timer>4000){//After 4 seconds (goal is dropped)
+                if(drive.wobbleGrabber.getPosition()==0 && drive.getWobbleGrabberArmPosition()==Position.DEFAULT){//As soon as goal is dropped
                     currentState = State.t1;
                     runTrajectory(1);//Drive back near start
                 }break;
@@ -148,20 +147,18 @@ public class AutoPath extends OpMode {
             case t2:
                 if(!drive.isBusy()){//Once driven up to second wobble goal
                     currentState = State.wobbleGrab;
-                    timer = System.currentTimeMillis();
                 }break;
             case wobbleGrab:
-                if(System.currentTimeMillis()-timer>4000) {//After 4 seconds (second goal is grabbed)
+                if(drive.wobbleGrabber.getPosition()==1 && drive.getWobbleGrabberArmPosition()==Position.DEFAULT) {//As soon as second goal is grabbed
                     currentState = State.t3;
                     runTrajectory(3);//Drive back to zone to drop off second wobble goal
                 }break;
             case t3:
                 if(!drive.isBusy()){//Once driven back to zone
                     currentState = State.secondWobbleDrop;
-                    timer = System.currentTimeMillis();
                 }break;
             case secondWobbleDrop:
-                if(System.currentTimeMillis()-timer>4000){//After 4 seconds (second goal is dropped)
+                if(drive.wobbleGrabber.getPosition()==0 && drive.getWobbleGrabberArmPosition()==Position.DEFAULT){//As soon as second goal is dropped
                     currentState = State.t4;
                     runTrajectory(4);//Drive up to shooting line
                 }break;
@@ -177,7 +174,7 @@ public class AutoPath extends OpMode {
             case IDLE:
                 break;
         }
-        if(currentState==State.t2 && drive.getPoseEstimate().getY()>-45 && drive.getWobbleGrabberArmPosition()!= Position.EXTENDED){//On the way to grabbing second wobble goal
+        if(currentState==State.t2 && drive.getPoseEstimate().getY()>-45 && drive.getWobbleGrabberArmPosition()!= Position.EXTENDED){//On the way to grabbing second wobble goal, put down arm prematurely
             drive.setWobbleGrabberArmPosition(Position.EXTENDED);
         }
         drive.update();
@@ -282,22 +279,22 @@ public class AutoPath extends OpMode {
     }
 
     public void dropWobbleGoal(long timer){
-        if(System.currentTimeMillis()-timer<1000 && drive.getWobbleGrabberArmPosition()!=Position.EXTENDED) {
+        if(drive.getWobbleGrabberArmPosition()!=Position.EXTENDED && drive.wobbleGrabber.getPosition()==1) {//If wobble is still held, put down arm
             drive.setWobbleGrabberArmPosition(Position.EXTENDED);
         }
-        if(System.currentTimeMillis()-timer>1000 && drive.wobbleGrabber.getPosition()==1){
+        if(Math.abs(drive.wobbleGrabberArm.getCurrentPosition()-drive.getWobbleGrabberArmPosition().pos)<50){//If grabber arm is around where its supposed to be, release wobble
             drive.wobbleGrabber.setPosition(0);
-        }if(System.currentTimeMillis()-timer>2000 && drive.getWobbleGrabberArmPosition()!=Position.DEFAULT){
+        }if(drive.wobbleGrabber.getPosition()==0 && drive.getWobbleGrabberArmPosition()!=Position.DEFAULT){//Once wobble has been released, bring up arm
             drive.setWobbleGrabberArmPosition(Position.DEFAULT);
         }
     }
     public void pickupWobbleGoal(long timer){
-        if(System.currentTimeMillis()-timer<1000 && drive.getWobbleGrabberArmPosition()!=Position.EXTENDED){
+        if(drive.getWobbleGrabberArmPosition()!=Position.EXTENDED && drive.wobbleGrabber.getPosition()==0) {//If there is no wobble, put arm down
             drive.setWobbleGrabberArmPosition(Position.EXTENDED);
         }
-        if(System.currentTimeMillis()-timer>1000 && drive.wobbleGrabber.getPosition()==0) {
+        if(Math.abs(drive.wobbleGrabberArm.getCurrentPosition()-drive.getWobbleGrabberArmPosition().pos)<50){//If grabber arm is around where its supposed to be, grab wobble
             drive.wobbleGrabber.setPosition(1);
-        }if(System.currentTimeMillis()-timer>2000 && drive.getWobbleGrabberArmPosition()!=Position.DEFAULT){
+        }if(drive.wobbleGrabber.getPosition()==1 && drive.getWobbleGrabberArmPosition()!=Position.DEFAULT){//Once wobble has been grabbed, bring up arm
             drive.setWobbleGrabberArmPosition(Position.DEFAULT);
         }
     }
