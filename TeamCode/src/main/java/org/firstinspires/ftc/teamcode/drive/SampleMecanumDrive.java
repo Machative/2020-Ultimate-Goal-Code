@@ -99,8 +99,19 @@ public class SampleMecanumDrive extends MecanumDrive {
     //Servos
     public Servo wobbleGrabber;
 
-    //Limit Switch
-    public DigitalChannel elevatorSwitch;
+    //Wobble Grabber Arm Positions
+    public enum Position {
+        DEFAULT(-70),
+        EXTENDED(-700),
+        UPRIGHT(-250);
+
+        public final int pos;
+
+        private Position(int pos) {
+            this.pos=pos;
+        }
+    }
+    Position currentPos = Position.DEFAULT;
 
     private BNO055IMU imu;
 
@@ -394,10 +405,14 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     //Wobble Grabber
-    public void setWobbleGrabberArmPosition(int pos){
-        wobbleGrabberArm.setTargetPosition(pos);
+    public void setWobbleGrabberArmPosition(Position pos){
+        wobbleGrabberArm.setTargetPosition(pos.pos);
+        currentPos = pos;
         wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         wobbleGrabberArm.setPower(1);
+    }
+    public Position getWobbleGrabberArmPosition(){
+        return currentPos;
     }
     public void setWobbleGrabberArmPower(int pow){
         wobbleGrabberArm.setPower(pow);
