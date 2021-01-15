@@ -241,9 +241,9 @@ public class AutoPath extends OpMode {
         }
         drive.update();
         if(currentState==State.wobbleGrab){
-            pickupWobbleGoal(timer);
+            //pickupWobbleGoal(timer);
         }else if(currentState==State.secondWobbleDrop || currentState==State.firstWobbleDrop){
-            dropWobbleGoal(timer);
+            //dropWobbleGoal(timer);
         } else if(currentState==State.shoot){
             shootRings(timer);
         }
@@ -336,20 +336,20 @@ public class AutoPath extends OpMode {
     }
 
     public void shootRings(long timer){
-        drive.shooterOn();
+        /*drive.shooterOn();
         drive.intakeOn();
         while(System.currentTimeMillis()-timer<5000){}
         drive.toggleShooter();
-        drive.toggleIntake();
+        drive.toggleIntake();*/
     }
     public void shootOneRing(){
-        drive.shooterOn();
+        /*drive.shooterOn();
         drive.intakeOn();
         while(System.currentTimeMillis()-timer<1000){}
         drive.toggleShooter();
-        drive.toggleIntake();
+        drive.toggleIntake();*/
     }
-    public void dropWobbleGoal(long timer){
+    /*public void dropWobbleGoal(long timer){
         if(System.currentTimeMillis()-timer<1000 && !positionSet) {
             drive.setWobbleGrabberArmPosition(-700);
             positionSet=true;
@@ -380,7 +380,7 @@ public class AutoPath extends OpMode {
     }
     public void grabWobble(){
         drive.wobbleGrabber.setPosition(1);
-    }
+    }*/
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 

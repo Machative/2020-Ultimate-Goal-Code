@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 
@@ -90,20 +91,17 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     //Motors
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
-    public DcMotorEx shooter;
-    public DcMotorEx lateralIntake;
-    public DcMotorEx intakeRunner;
-    public DcMotorEx wobbleGrabberArm;
+    public DcMotorEx shooterLeft;
+    public DcMotorEx shooterRight;
+    public DcMotorEx intake;
+    public Servo ringPusher;
+    //public DcMotorEx wobbleGrabberArm;
     private List<DcMotorEx> motors;
 
     //Servos
-    public Servo wobbleGrabber;
-
-    //Limit Switch
-    public DigitalChannel elevatorSwitch;
+    //public Servo wobbleGrabber;
 
     private BNO055IMU imu;
-
     private VoltageSensor batteryVoltageSensor;
 
     private Pose2d lastPoseOnTurn;
@@ -141,15 +139,16 @@ public class SampleMecanumDrive extends MecanumDrive {
         rightRear = hardwareMap.get(DcMotorEx.class, "rear_right");
         rightFront = hardwareMap.get(DcMotorEx.class, "front_right");
 
-        lateralIntake = hardwareMap.get(DcMotorEx.class, "lateral_intake");
-        intakeRunner = hardwareMap.get(DcMotorEx.class, "intake_runner");
-        wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
-        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooter_left");
+        shooterRight = hardwareMap.get(DcMotorEx.class, "shooter_right");
+        //wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
 
-        wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
-        wobbleGrabber.setPosition(1);
+        ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
+        //wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
+        //wobbleGrabber.setPosition(1);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, lateralIntake, wobbleGrabberArm, intakeRunner, shooter);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, shooterLeft, shooterRight);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -158,7 +157,9 @@ public class SampleMecanumDrive extends MecanumDrive {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
-        wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         if (RUN_USING_ENCODER) {
             setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -169,7 +170,9 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         leftRear.setDirection(DcMotorEx.Direction.REVERSE);//so that lateral encoder is correct direction
-        lateralIntake.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        ringPusher.setPosition(0);
 
         setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
     }
@@ -378,30 +381,32 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    public void shooterOn(){
-        shooter.setPower(1);
+    public void setShooterSpeed(float power){
+        shooterLeft.setPower(power);
+        shooterRight.setPower(power);
     }
-    public void toggleShooter(){
-        shooter.setPower(1-shooter.getPower());
+    public void shooterOff(){
+        shooterLeft.setPower(0);
+        shooterRight.setPower(0);
     }
     public void intakeOn(){
-        intakeRunner.setPower(0.5);
-        lateralIntake.setPower(1);
+        intake.setPower(1);
     }
     public void toggleIntake(){
-        intakeRunner.setPower(0.5-intakeRunner.getPower());
-        lateralIntake.setPower(1-lateralIntake.getPower());
+        if(Math.abs(intake.getPower())!=1) intake.setPower(1);
+        else intake.setPower(0);
     }
+    public void setIntakePower(float pow) {intake.setPower(pow);}
 
     //Wobble Grabber
-    public void setWobbleGrabberArmPosition(int pos){
+    /*public void setWobbleGrabberArmPosition(int pos){
         wobbleGrabberArm.setTargetPosition(pos);
         wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         wobbleGrabberArm.setPower(1);
     }
     public void setWobbleGrabberArmPower(int pow){
         wobbleGrabberArm.setPower(pow);
-    }
+    }*/
     @NonNull
     @Override
     public List<Double> getWheelPositions() {

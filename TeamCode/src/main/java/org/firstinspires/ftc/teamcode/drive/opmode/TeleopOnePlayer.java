@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  */
 @Config
 @TeleOp(group = "drive")
-public class Teleop extends LinearOpMode {
+public class TeleopOnePlayer extends LinearOpMode {
     //Gamepad 2 Timers
     public static long atimer=0;
     public static long btimer=0;
@@ -58,11 +58,10 @@ public class Teleop extends LinearOpMode {
             //boolean wobbleGrab = gamepad2.y;//Wobble Grabber Servo
             //float wobblearm = gamepad2.right_stick_y; //Manually adjust Wobble Grabber Arm
             //boolean wobblearmpos = gamepad2.a;
-            boolean intake = gamepad2.x;//Toggle Intake
-            boolean shooter = gamepad2.b;//Toggle Shooter
-            boolean shooterDec = gamepad2.dpad_down;
-            boolean shooterInc = gamepad2.dpad_up;
-            float intakeManual = gamepad2.left_stick_y;
+            boolean intake = gamepad1.x;//Toggle Intake
+            boolean shooter = gamepad1.b;//Toggle Shooter
+            boolean shooterDec = gamepad1.dpad_down;
+            boolean shooterInc = gamepad1.dpad_up;
 
             //Tighten/Loosen Wobble Grabber Servo
             /*if(wobbleGrab && System.currentTimeMillis()-ytimer>500){
@@ -71,11 +70,9 @@ public class Teleop extends LinearOpMode {
             }*/
 
             //Toggle Intake
-            if(intake && System.currentTimeMillis()-xtimer>250 && Math.abs(intakeManual)<0.1){
+            if(intake && System.currentTimeMillis()-xtimer>250){
                 drive.toggleIntake();
                 xtimer = System.currentTimeMillis();
-            }else if(Math.abs(intakeManual)>0.1){
-                drive.setIntakePower(-intakeManual);
             }
             //Toggle Shooter
             if(shooter && System.currentTimeMillis()-btimer>250){
