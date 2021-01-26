@@ -95,11 +95,11 @@ public class SampleMecanumDrive extends MecanumDrive {
     public DcMotorEx shooterRight;
     public DcMotorEx intake;
     public Servo ringPusher;
-    //public DcMotorEx wobbleGrabberArm;
+    public DcMotorEx wobbleGrabberArm;
     private List<DcMotorEx> motors;
 
     //Servos
-    //public Servo wobbleGrabber;
+    public Servo wobbleGrabber;
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
@@ -142,13 +142,13 @@ public class SampleMecanumDrive extends MecanumDrive {
         intake = hardwareMap.get(DcMotorEx.class, "intake");
         shooterLeft = hardwareMap.get(DcMotorEx.class, "shooter_left");
         shooterRight = hardwareMap.get(DcMotorEx.class, "shooter_right");
-        //wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
+        wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
 
         ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
-        //wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
-        //wobbleGrabber.setPosition(1);
+        wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
+        wobbleGrabber.setPosition(1);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, shooterLeft, shooterRight);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, shooterLeft, shooterRight,wobbleGrabberArm);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -157,7 +157,7 @@ public class SampleMecanumDrive extends MecanumDrive {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
-        //wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -169,8 +169,11 @@ public class SampleMecanumDrive extends MecanumDrive {
             setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, MOTOR_VELO_PID);
         }
 
-        leftRear.setDirection(DcMotorEx.Direction.REVERSE);//so that lateral encoder is correct direction
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorEx.Direction.FORWARD);
+        intake.setDirection(DcMotorEx.Direction.REVERSE);
+        leftFront.setDirection(DcMotorEx.Direction.REVERSE);
+        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
+        shooterLeft.setDirection(DcMotorEx.Direction.REVERSE);
 
         ringPusher.setPosition(0);
 
@@ -399,14 +402,19 @@ public class SampleMecanumDrive extends MecanumDrive {
     public void setIntakePower(float pow) {intake.setPower(pow);}
 
     //Wobble Grabber
-    /*public void setWobbleGrabberArmPosition(int pos){
+    public void setWobbleArmPosition(int pos){
         wobbleGrabberArm.setTargetPosition(pos);
-        wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        wobbleGrabberArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         wobbleGrabberArm.setPower(1);
     }
-    public void setWobbleGrabberArmPower(int pow){
+    public void wobbleGrabberArmManualDrive(int pow){
+        wobbleGrabberArm.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         wobbleGrabberArm.setPower(pow);
-    }*/
+    }
+    public void toggleWobbleGrabber(){
+        wobbleGrabber.setPosition(wobbleGrabber.getPosition()==0.5?1:0.5);
+    }
+
     @NonNull
     @Override
     public List<Double> getWheelPositions() {

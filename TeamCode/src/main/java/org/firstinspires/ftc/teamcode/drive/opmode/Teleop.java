@@ -19,20 +19,26 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 @Config
 @TeleOp(group = "drive")
 public class Teleop extends LinearOpMode {
+    //Gamepad 1 Timers
+    public static long atimer1=0;
+    public static long joltTimer=0;
+    public static boolean joltBool=false;
     //Gamepad 2 Timers
-    public static long atimer=0;
-    public static long btimer=0;
-    public static long xtimer=0;
-    public static long ytimer=0;
+    public static long atimer2=0;
+    public static long btimer2=0;
+    public static long xtimer2=0;
+    public static long ytimer2=0;
+    public static long rbtimer2=0;
+    public static long servoTimer=0;
     public static long dpaddowntimer=0;
     public static long dpaduptimer=0;
     public static boolean shooterOn=false;
 
     float shooterpower=0.82f;
+    float wobbleArmSpeed=20;
 
     public static boolean manualWobbleArm=false;
-    public static int wobbleArmPos=-70;
-    public static int direction=0;
+    public static int wobbleArmPos=-10;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -48,47 +54,63 @@ public class Teleop extends LinearOpMode {
             float ry = gamepad1.right_stick_y;
             float rx = gamepad1.right_stick_x;
             float gas = gamepad1.right_trigger+1.0f;
+            boolean jolt = gamepad1.a;
             boolean aimMode = gamepad1.right_bumper;
 
             float aim = (aimMode?0.3f:1);
-            float aimStrafe = (aimMode?0.5f:1);
+            float aimStrafe = (aimMode?0.45f:1);
             drive.setDrivePowers(rx*0.5*gas*aimStrafe,-ly*0.5*gas*aim,lx*0.5*gas*aim,-ry*0.5*gas*aim);
 
             //Mechanism Controls
-            //boolean wobbleGrab = gamepad2.y;//Wobble Grabber Servo
-            //float wobblearm = gamepad2.right_stick_y; //Manually adjust Wobble Grabber Arm
-            //boolean wobblearmpos = gamepad2.a;
+            float wobblearm = gamepad2.right_stick_y; //Manually adjust Wobble Grabber Arm Position
             boolean intake = gamepad2.x;//Toggle Intake
-            boolean shooter = gamepad2.b;//Toggle Shooter
-            boolean shooterDec = gamepad2.dpad_down;
-            boolean shooterInc = gamepad2.dpad_up;
-            float intakeManual = gamepad2.left_stick_y;
+            boolean shooterMotors = gamepad2.y;//Toggle Shooter
+            boolean shoot = gamepad2.right_bumper;//Shoot Ring w/ Shooter Servo
+            boolean wobbleGrab = gamepad2.a;//Grab Wobble w/ Servo
+            boolean wobbleToggle = gamepad2.b;//Toggle Wobble Grabber Arm Position
+            boolean shooterDec = gamepad2.dpad_down;//Decrease Shooter Speed
+            boolean shooterInc = gamepad2.dpad_up;//Increase Shooter Speed
+            float intakeManual = gamepad2.left_stick_y;//Manually adjust Intake Speed/Direction
 
-            //Tighten/Loosen Wobble Grabber Servo
-            /*if(wobbleGrab && System.currentTimeMillis()-ytimer>500){
-                drive.wobbleGrabber.setPosition(1-drive.wobbleGrabber.getPosition());
-                ytimer = System.currentTimeMillis();
-            }*/
+            //JOLT
+            if(jolt && System.currentTimeMillis()-atimer1>250){
+                drive.setDrivePowers(0,0,-1,0);
+                joltTimer=System.currentTimeMillis();
+                atimer1=System.currentTimeMillis();
+            }
+            if(System.currentTimeMillis()-joltTimer>50 && joltTimer>0){
+                if(!joltBool){
+                    drive.setDrivePowers(0,0,1,0);
+                    joltTimer=System.currentTimeMillis();
+                    joltBool=true;
+                }else{
+                    drive.setDrivePowers(0,0,0,0);
+                    joltBool=false;
+                    joltTimer=-1;
+                }
+            }
 
-            //Toggle Intake
-            if(intake && System.currentTimeMillis()-xtimer>250 && Math.abs(intakeManual)<0.1){
+            //INTAKE
+            if(intake && System.currentTimeMillis()-xtimer2>250 && Math.abs(intakeManual)<0.1){
                 drive.toggleIntake();
-                xtimer = System.currentTimeMillis();
+                xtimer2 = System.currentTimeMillis();
             }else if(Math.abs(intakeManual)>0.1){
                 drive.setIntakePower(-intakeManual);
             }
-            //Toggle Shooter
-            if(shooter && System.currentTimeMillis()-btimer>250){
+
+            //SHOOTER MOTORS
+            if(shooterMotors && System.currentTimeMillis()-ytimer2>250){
                 shooterOn=!shooterOn;
-                drive.ringPusher.setPosition(1-drive.ringPusher.getPosition());
-                btimer = System.currentTimeMillis();
+                ytimer2=System.currentTimeMillis();
             }
             if(shooterOn){
                 drive.setShooterSpeed(shooterpower);
             }else{
                 drive.shooterOff();
             }
-            telemetry.addData("shooter power", shooterpower);
+            telemetry.addData("Shooter Power: ", Math.floor((shooterpower*100)+0.1f));
+            telemetry.addData("Wobble Arm Pos: ",drive.wobbleGrabberArm.getCurrentPosition());
+
             telemetry.update();
             if(shooterDec && System.currentTimeMillis()-dpaddowntimer>250 && shooterpower>0f){
                 shooterpower-=0.01f;
@@ -98,21 +120,36 @@ public class Teleop extends LinearOpMode {
                 dpaduptimer=System.currentTimeMillis();
             }
 
-            //Toggle Wobble Grabber Arm Position
-            /*if(wobblearmpos && System.currentTimeMillis()-atimer>250){
-                manualWobbleArm=false;
-                if(wobbleArmPos==-70) wobbleArmPos=-700;
-                else if(wobbleArmPos==-700) wobbleArmPos=-70;
-                atimer=System.currentTimeMillis();
+            //SHOOTER SERVO
+            if(shoot && System.currentTimeMillis()-rbtimer2>250){
+                drive.ringPusher.setPosition(1);
+                servoTimer=System.currentTimeMillis();
+                rbtimer2 = System.currentTimeMillis();
             }
-            if(!manualWobbleArm) drive.setWobbleGrabberArmPosition(wobbleArmPos);
+            if(drive.ringPusher.getPosition()==1 && System.currentTimeMillis()-servoTimer>800) {
+                drive.ringPusher.setPosition(0);
+            }
 
-            //Manual Wobble Grabber Arm Control
+            //WOBBLE GRABBER
+            if(wobbleGrab && System.currentTimeMillis()-atimer2>500){
+                drive.toggleWobbleGrabber();
+                atimer2 = System.currentTimeMillis();
+            }
+            //WOBBLE GRABBER ARM
+            if(wobbleToggle && System.currentTimeMillis()-btimer2>250){
+                manualWobbleArm=false;
+                if(wobbleArmPos==-10) wobbleArmPos=-350;
+                else if(wobbleArmPos==-350) wobbleArmPos=-10;
+                btimer2=System.currentTimeMillis();
+            }
+            if(!manualWobbleArm) drive.setWobbleArmPosition(wobbleArmPos);
+
+            //MANUAL WOBBLE GRABBER ARM CONTROL
             if(wobblearm < -0.1 || wobblearm > 0.1) {
                 manualWobbleArm = true;
-                drive.wobbleGrabberArm.setTargetPosition(drive.wobbleGrabberArm.getCurrentPosition() + (int) (wobblearm * speed));
+                drive.setWobbleArmPosition(drive.wobbleGrabberArm.getCurrentPosition() + (int) (wobblearm * wobbleArmSpeed));
                 drive.wobbleGrabberArm.setPower(1);
-            }*/
+            }
         }
     }
 }
