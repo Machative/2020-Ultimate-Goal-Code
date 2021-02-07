@@ -35,15 +35,13 @@ public class Teleop extends LinearOpMode {
     public static boolean shooterOn=false;
 
     float shooterpower=0.82f;
-    float wobbleArmSpeed=20;
+    float wobbleArmSpeed=-50;
 
     public static boolean manualWobbleArm=false;
     public static int wobbleArmPos=-10;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         waitForStart();
 

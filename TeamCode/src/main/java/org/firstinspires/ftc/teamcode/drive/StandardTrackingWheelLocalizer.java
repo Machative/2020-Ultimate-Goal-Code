@@ -31,11 +31,11 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
     public static double WHEEL_RADIUS = 1; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double LATERAL_DISTANCE = 14.5; // in; distance between the left and right wheels
-    public static double FORWARD_OFFSET = 5.5; // in; offset of the lateral wheel
+    public static double LATERAL_DISTANCE = 14.5081; // in; distance between the left and right wheels
+    public static double FORWARD_OFFSET = 6.25; // in; offset of the lateral wheel
 
-    public static double X_MULT = 1;
-    public static double Y_MULT = 1;
+    public static double X_MULT = 0.985114;
+    public static double Y_MULT = 1.00932;
 
     private Encoder leftEncoder, rightEncoder, frontEncoder;
 
@@ -60,19 +60,15 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
     @Override
     public List<Double> getWheelPositions() {
         return Arrays.asList(
-                encoderTicksToInches(leftEncoder.getCurrentPosition()),
-                encoderTicksToInches(rightEncoder.getCurrentPosition()),
-                encoderTicksToInches(frontEncoder.getCurrentPosition())
+                encoderTicksToInches(leftEncoder.getCurrentPosition()) * X_MULT,
+                encoderTicksToInches(rightEncoder.getCurrentPosition()) * X_MULT,
+                encoderTicksToInches(frontEncoder.getCurrentPosition()) * Y_MULT
         );
     }
 
     @NonNull
     @Override
     public List<Double> getWheelVelocities() {
-        // TODO: If your encoder velocity can exceed 32767 counts / second (such as the REV Through Bore and other
-        //  competing magnetic encoders), change Encoder.getRawVelocity() to Encoder.getCorrectedVelocity() to enable a
-        //  compensation method
-
         return Arrays.asList(
                 encoderTicksToInches(leftEncoder.getCorrectedVelocity()) * X_MULT,
                 encoderTicksToInches(rightEncoder.getCorrectedVelocity()) * X_MULT,

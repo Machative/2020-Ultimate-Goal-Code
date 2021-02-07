@@ -120,6 +120,8 @@ public class AutoPath extends OpMode {
             if (updatedRecognitions != null && updatedRecognitions.size()>0) {
                 if(updatedRecognitions.get(0).getLabel().equals("Quad")) numRings=4;
                 else if(updatedRecognitions.get(0).getLabel().equals("Single")) numRings=1;
+            }else{
+                numRings=0;
             }
         }
         telemetry.addData("Num Rings: ",numRings);
@@ -151,20 +153,17 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t1;
                             drive.followTrajectoryAsync(t_A_1);
-                            break;
                         }break;
                     case t1://Drive back to lined up with second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleArmExtend;
                             timer=System.currentTimeMillis();
-                            break;
                         }break;
                     case wobbleArmExtend://Extend wobble arm
                         if(System.currentTimeMillis()-timer>500){
                             currentState = State.t2;
                             drive.followTrajectoryAsync(t_A_2);
-                            break;
-                        }
+                        }break;
                     case t2://Drive into second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleGrab;
@@ -175,7 +174,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1250) {
                             currentState = State.t3;
                             drive.followTrajectoryAsync(t_A_3);
-                            break;
                         }break;
                     case t3://Drive back to zone A with second wobble goal
                         if(!drive.isBusy()){
@@ -187,7 +185,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t4;
                             drive.followTrajectoryAsync(t_A_4);
-                            break;
                         }break;
                     case t4://Drive up to shooting line
                         if(!drive.isBusy()){
@@ -198,8 +195,7 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>5000) {
                             currentState = State.t5;
                             drive.followTrajectoryAsync(t_A_5);
-                            break;
-                        }
+                        }break;
                     case t5://Park on parking line
                         if(!drive.isBusy()){
                             currentState = State.IDLE;
@@ -207,7 +203,7 @@ public class AutoPath extends OpMode {
                     case IDLE:
                         break;
                 }
-            case B:
+            case B:/*
                 switch(currentState){
                     case t0://Drive to zone B
                         if(!drive.isBusy() && !started){
@@ -223,20 +219,17 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t1;
                             drive.followTrajectoryAsync(t_B_1);
-                            break;
                         }break;
                     case t1://Drive back to lined up with second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleArmExtend;
                             timer=System.currentTimeMillis();
-                            break;
                         }break;
                     case wobbleArmExtend://Extend wobble arm
                         if(System.currentTimeMillis()-timer>500){
                             currentState = State.t2;
                             drive.followTrajectoryAsync(t_B_2);
-                            break;
-                        }
+                        }break;
                     case t2://Drive into second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleGrab;
@@ -247,7 +240,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1250) {
                             currentState = State.t3;
                             drive.followTrajectoryAsync(t_B_3);
-                            break;
                         }break;
                     case t3://Drive back to zone B with second wobble goal
                         if(!drive.isBusy()){
@@ -259,7 +251,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t4;
                             drive.followTrajectoryAsync(t_B_4);
-                            break;
                         }break;
                     case t4://Drive up to shooting line
                         if(!drive.isBusy()){
@@ -270,8 +261,7 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>5000) {
                             currentState = State.t5;
                             drive.followTrajectoryAsync(t_B_5);
-                            break;
-                        }
+                        }break;
                     case t5://Park on parking line
                         if(!drive.isBusy()){
                             currentState = State.IDLE;
@@ -296,20 +286,17 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t1;
                             drive.followTrajectoryAsync(t_C_1);
-                            break;
                         }break;
                     case t1://Drive back to lined up with second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleArmExtend;
                             timer=System.currentTimeMillis();
-                            break;
                         }break;
                     case wobbleArmExtend://Extend wobble arm
                         if(System.currentTimeMillis()-timer>500){
                             currentState = State.t2;
                             drive.followTrajectoryAsync(t_C_2);
-                            break;
-                        }
+                        }break;
                     case t2://Drive into second wobble goal
                         if(!drive.isBusy()){
                             currentState = State.wobbleGrab;
@@ -320,7 +307,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1250) {
                             currentState = State.t3;
                             drive.followTrajectoryAsync(t_C_3);
-                            break;
                         }break;
                     case t3://Drive back to zone C with second wobble goal
                         if(!drive.isBusy()){
@@ -332,7 +318,6 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>1000){
                             currentState = State.t4;
                             drive.followTrajectoryAsync(t_C_4);
-                            break;
                         }break;
                     case t4://Drive up to shooting line
                         if(!drive.isBusy()){
@@ -343,8 +328,7 @@ public class AutoPath extends OpMode {
                         if(System.currentTimeMillis()-timer>5000) {
                             currentState = State.t5;
                             drive.followTrajectoryAsync(t_C_5);
-                            break;
-                        }
+                        }break;
                     case t5://Park on parking line
                         if(!drive.isBusy()){
                             currentState = State.IDLE;
@@ -352,7 +336,7 @@ public class AutoPath extends OpMode {
                     case IDLE:
                         break;
                 }
-                break;
+                break;*/
         }
 
         drive.update();
@@ -376,12 +360,12 @@ public class AutoPath extends OpMode {
         //Drop Wobble Goal
         //Move back to other wobble goal
         t_A_1 = drive.trajectoryBuilder(t_A_0.end())
-                .lineToLinearHeading(new Pose2d(-40,-50, Math.toRadians(270)))
+                .splineToLinearHeading(new Pose2d(-44,-50, Math.toRadians(270)), Math.toRadians(270))
                 .build();
         //Lower Wobble Goal Arm
         //Drive into Second Wobble Goal
-        t_A_2 = drive.trajectoryBuilder(t_A_1.end(), true)
-                .lineTo(new Vector2d(-40,-35))
+        t_A_2 = drive.trajectoryBuilder(t_A_1.end())
+                .lineTo(new Vector2d(-44,-30))
                 .build();
         //Pick Up Wobble Goal
         //Move back to zone A with grabbed Wobble Goal
@@ -401,15 +385,15 @@ public class AutoPath extends OpMode {
 
         //------------------------ 1 Ring -> Zone B -> Set B ------------------------
         //Drive to Zone B, avoiding the pile of rings
-        t_B_0 = drive.trajectoryBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-24,-60, Math.toRadians(180)),Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(24, -36),Math.toRadians(180))
+        /*t_B_0 = drive.trajectoryBuilder(startPose)
+                .splineToLinearHeading(new Pose2d(-24,-60, Math.toRadians(90)),0)
+                .splineToLinearHeading(new Pose2d(24, -36, Math.toRadians(180)),0)
                 .build();
         //Drop Wobble Goal
         //Drive to lined up with second Wobble Goal while avoiding pile of rings
         t_B_1 = drive.trajectoryBuilder(t_B_0.end())
-                .splineTo(new Vector2d(0,0),Math.toRadians(180))
-                .lineToLinearHeading(new Pose2d(-48,0, Math.toRadians(90)))
+                .splineTo(new Vector2d(0,0),0)
+                .splineTo(new Vector2d(-48,0),0)
                 .build();
         //Extend wobble goal arm
         //Drive into wobble goal
@@ -442,8 +426,8 @@ public class AutoPath extends OpMode {
         //Drop Wobble Goal
         //Drive to lined up with second Wobble Goal while avoiding pile of rings
         t_C_1 = drive.trajectoryBuilder(t_B_0.end())
-                .splineTo(new Vector2d(0,0),Math.toRadians(180))
-                .lineToLinearHeading(new Pose2d(-48,0, Math.toRadians(90)))
+                .splineTo(new Vector2d(0,0),0)
+                .splineTo(new Vector2d(-48,0),0)
                 .build();
         //Extend wobble goal arm
         //Drive into wobble goal
@@ -465,7 +449,7 @@ public class AutoPath extends OpMode {
         //Move to parking line
         t_C_5 = drive.trajectoryBuilder(t_A_4.end())
                 .lineTo(new Vector2d(10, -36))
-                .build();
+                .build();*/
     }
 
     public void shootRings(long timer){
