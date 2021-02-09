@@ -146,7 +146,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
         ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
         wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
-        wobbleGrabber.setPosition(1);
+        wobbleGrabber.setPosition(0);
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, shooterLeft, shooterRight,wobbleGrabberArm);
 

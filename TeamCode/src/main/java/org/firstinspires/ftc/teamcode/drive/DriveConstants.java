@@ -45,7 +45,7 @@ public class DriveConstants {
      */
     public static double WHEEL_RADIUS = 2; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 14.79; // in
+    public static double TRACK_WIDTH = 15.9; // in
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -53,8 +53,8 @@ public class DriveConstants {
      * motor encoders or have elected not to use them for velocity control, these values should be
      * empirically tuned.
      */
-    public static double kV = 0.018;
-    public static double kA = 0.0045;
+    public static double kV = 0.0153;//this was tuned with a battery voltage of about 14v. the lower the voltage, the higher kv must be to meet its target velocity. thus, kv should generally not be much lower than this unless a battery is brand new and fully charged.
+    public static double kA = 0.003;
     public static double kStatic = 0;
 
     /*
@@ -69,7 +69,6 @@ public class DriveConstants {
             40.0, 30.0, 0.0,
             Math.toRadians(90), Math.toRadians(90), 0.0
     );
-
 
     public static double encoderTicksToInches(double ticks) {
         return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
