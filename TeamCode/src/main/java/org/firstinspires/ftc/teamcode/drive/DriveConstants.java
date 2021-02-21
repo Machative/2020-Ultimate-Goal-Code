@@ -66,8 +66,8 @@ public class DriveConstants {
      * forces acceleration-limited profiling). All distance units are inches.
      */
     public static DriveConstraints BASE_CONSTRAINTS = new DriveConstraints(//TODO: Max velocity can be raised according to the formula maxv = maxrpm/60 * gear ratio * wheel radius * 2pi. It shouldn't be set to more than 80% of theoretical, so I can reasonably set mine up to 50-55 inches per second
-            40.0, 30.0, 0.0,
-            Math.toRadians(90), Math.toRadians(90), 0.0
+            45.0, 30.0, 0.0,
+            Math.toRadians(135), Math.toRadians(90), 0.0
     );
 
     public static double encoderTicksToInches(double ticks) {

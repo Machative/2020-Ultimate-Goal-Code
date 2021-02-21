@@ -38,7 +38,7 @@ public class Teleop extends LinearOpMode {
     float wobbleArmSpeed=-50;
 
     public static boolean manualWobbleArm=false;
-    public static int wobbleArmPos=-10;
+    public static int wobbleArmPos=-30;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -136,8 +136,8 @@ public class Teleop extends LinearOpMode {
             //WOBBLE GRABBER ARM
             if(wobbleToggle && System.currentTimeMillis()-btimer2>250){
                 manualWobbleArm=false;
-                if(wobbleArmPos==-10) wobbleArmPos=-350;
-                else if(wobbleArmPos==-350) wobbleArmPos=-10;
+                if(wobbleArmPos==-30) wobbleArmPos=-350;
+                else if(wobbleArmPos==-350) wobbleArmPos=-30;
                 btimer2=System.currentTimeMillis();
             }
             if(!manualWobbleArm) drive.setWobbleArmPosition(wobbleArmPos);

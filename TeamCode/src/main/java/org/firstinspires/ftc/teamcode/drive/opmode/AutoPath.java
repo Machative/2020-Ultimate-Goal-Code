@@ -46,24 +46,21 @@ public class AutoPath extends OpMode {
     private VuforiaLocalizer vuforia;
     private TFObjectDetector tfod;
 
-    private static final int grabberArmRetracted = -10;
+    private static final int grabberArmRetracted = -30;
     private static final int grabberArmExtended = -350;
 
-    boolean positionSet=false;
-    boolean started=false;
-    boolean waitToDrive=false;
     long timer=0;
 
     private static int numRings=0;
-    private static final float shooterSpeed=0.82f;
+    private static final float shooterSpeed=0.52f;
     public SampleMecanumDrive drive;
 
     //Set A Trajectories
     Trajectory t_A_0, t_A_1, t_A_2, t_A_3, t_A_4, t_A_5;
     //Set B Trajectories
-    Trajectory t_B_0, t_B_1, t_B_2, t_B_3, t_B_4, t_B_5;
+    Trajectory t_B_0, t_B_1, t_B_2, t_B_3, t_B_4, t_B_5, t_B_6, t_B_7;
     //Set C Trajectories
-    Trajectory t_C_0, t_C_1, t_C_2, t_C_3, t_C_4, t_C_5;
+    Trajectory t_C_0, t_C_1, t_C_2, t_C_3, t_C_4, t_C_5, t_C_6, t_C_7;
 
     enum State {
         t0,
@@ -72,7 +69,10 @@ public class AutoPath extends OpMode {
         t3,
         t4,
         t5,
-        shoot,
+        t6,
+        t7,
+        shoot1,
+        shoot2,
         IDLE
     }
     enum Set {
@@ -128,8 +128,10 @@ public class AutoPath extends OpMode {
 
     @Override
     public void loop() {
-        telemetry.addData("Current Set: ",set);
-        telemetry.addData("Current State: ",currentState);
+        Pose2d poseEstimate = drive.getPoseEstimate();
+        telemetry.addData("x", poseEstimate.getX());
+        telemetry.addData("y", poseEstimate.getY());
+        telemetry.addData("heading", poseEstimate.getHeading());
         telemetry.update();
         switch(set){
             case A:
@@ -158,159 +160,153 @@ public class AutoPath extends OpMode {
                         break;
                     case t4:
                         if(!drive.isBusy()){
-                            currentState = State.shoot;
-                            timer=System.currentTimeMillis();
+                            currentState = State.shoot1;
                             drive.followTrajectoryAsync(t_A_4);
                         }
                         break;
-                    case shoot:
-                        if(System.currentTimeMillis()-timer>6000){//wait for shooter
-                            currentState=State.t5;
-                        }
-                    case t5:
+                    case shoot1:
                         if(!drive.isBusy()){
+                            timer=System.currentTimeMillis();
+                            currentState=State.t5;
+                        }break;
+                    case t5:
+                        if(System.currentTimeMillis()-timer>5000){
                             currentState = State.IDLE;
                             drive.followTrajectoryAsync(t_A_5);
-                        }
+                        }break;
                     case IDLE:
                         break;
                 }
-            case B:/*
+                break;
+            case B:
                 switch(currentState){
-                    case t0://Drive to zone B
-                        if(!drive.isBusy() && !started){
-                            drive.followTrajectoryAsync(t_B_0);
-                            started=true;
-                            break;
-                        }else if(!drive.isBusy()){
-                            currentState = State.firstWobbleDrop;
-                            positionSet=false;
-                            timer=System.currentTimeMillis();
-                        }break;
-                    case firstWobbleDrop://Drop wobble goal
-                        if(System.currentTimeMillis()-timer>1000){
+                    case t0://Strafe left to shoot
+                        drive.followTrajectoryAsync(t_B_0);
+                        currentState=State.shoot1;
+                        break;
+                    case shoot1://Shoot three rings
+                        if(!drive.isBusy()){
                             currentState = State.t1;
-                            drive.followTrajectoryAsync(t_B_1);
-                        }break;
-                    case t1://Drive back to lined up with second wobble goal
-                        if(!drive.isBusy()){
-                            currentState = State.wobbleArmExtend;
                             timer=System.currentTimeMillis();
-                        }break;
-                    case wobbleArmExtend://Extend wobble arm
-                        if(System.currentTimeMillis()-timer>500){
+                        }
+                        break;
+                    case t1://Strafe back to original position
+                        if(System.currentTimeMillis()-timer>5000){
                             currentState = State.t2;
-                            drive.followTrajectoryAsync(t_B_2);
-                        }break;
-                    case t2://Drive into second wobble goal
+                            drive.followTrajectoryAsync(t_B_1);
+                        }
+                        break;
+                    case t2://Drive forward to intake ring
                         if(!drive.isBusy()){
-                            currentState = State.wobbleGrab;
-                            positionSet=false;
-                            timer = System.currentTimeMillis();
-                        }break;
-                    case wobbleGrab://Grab wobble goal
-                        if(System.currentTimeMillis()-timer>1250) {
                             currentState = State.t3;
-                            drive.followTrajectoryAsync(t_B_3);
-                        }break;
-                    case t3://Drive back to zone B with second wobble goal
+                            drive.followTrajectoryAsync(t_B_2);
+                        }
+                        break;
+                    case t3://Drive up to Zone B to drop off first wobble goal
                         if(!drive.isBusy()){
-                            currentState = State.secondWobbleDrop;
-                            positionSet=false;
-                            timer = System.currentTimeMillis();
-                        }break;
-                    case secondWobbleDrop://Drop second wobble goal
-                        if(System.currentTimeMillis()-timer>1000){
+                            currentState = State.shoot2;
+                            drive.followTrajectoryAsync(t_B_3);
+                        }
+                        break;
+                    case shoot2:
+                        if(!drive.isBusy()){
                             currentState = State.t4;
+                            timer=System.currentTimeMillis();
+                        }
+                        break;
+                    case t4://Drive to shooting line
+                        if(System.currentTimeMillis()-timer>2500){
+                            currentState = State.t5;
                             drive.followTrajectoryAsync(t_B_4);
                         }break;
-                    case t4://Drive up to shooting line
+                    case t5:
                         if(!drive.isBusy()){
-                            currentState=State.shoot;
-                            timer=System.currentTimeMillis();
-                        }break;
-                    case shoot://Shoot three preloaded rings
-                        if(System.currentTimeMillis()-timer>5000) {
-                            currentState = State.t5;
+                            currentState = State.t6;
                             drive.followTrajectoryAsync(t_B_5);
-                        }break;
-                    case t5://Park on parking line
+                        }
+                        break;
+                    case t6:
+                        if(!drive.isBusy()){
+                            currentState = State.t7;
+                            drive.followTrajectoryAsync(t_B_6);
+                        }
+                        break;
+                    case t7:
                         if(!drive.isBusy()){
                             currentState = State.IDLE;
-                        }break;
+                            drive.followTrajectoryAsync(t_B_7);
+                        }
+                        break;
                     case IDLE:
                         break;
                 }
                 break;
             case C:
                 switch(currentState){
-                    case t0://Drive to zone C
-                        if(!drive.isBusy() && !started){
-                            drive.followTrajectoryAsync(t_C_0);
-                            started=true;
-                            break;
-                        }else if(!drive.isBusy()){
-                            currentState = State.firstWobbleDrop;
-                            positionSet=false;
-                            timer=System.currentTimeMillis();
-                        }break;
-                    case firstWobbleDrop://Drop wobble goal
-                        if(System.currentTimeMillis()-timer>1000){
+                    case t0://Strafe left to shoot
+                        drive.followTrajectoryAsync(t_C_0);
+                        currentState=State.shoot1;
+                        break;
+                    case shoot1://Shoot three rings
+                        if(!drive.isBusy()){
                             currentState = State.t1;
-                            drive.followTrajectoryAsync(t_C_1);
-                        }break;
-                    case t1://Drive back to lined up with second wobble goal
-                        if(!drive.isBusy()){
-                            currentState = State.wobbleArmExtend;
                             timer=System.currentTimeMillis();
-                        }break;
-                    case wobbleArmExtend://Extend wobble arm
-                        if(System.currentTimeMillis()-timer>500){
+                        }
+                        break;
+                    case t1://Strafe back to original position
+                        if(System.currentTimeMillis()-timer>5000){
                             currentState = State.t2;
-                            drive.followTrajectoryAsync(t_C_2);
-                        }break;
-                    case t2://Drive into second wobble goal
+                            drive.followTrajectoryAsync(t_C_1);
+                        }
+                        break;
+                    case t2://Drive forward to intake ring
                         if(!drive.isBusy()){
-                            currentState = State.wobbleGrab;
-                            positionSet=false;
-                            timer = System.currentTimeMillis();
-                        }break;
-                    case wobbleGrab://Grab wobble goal
-                        if(System.currentTimeMillis()-timer>1250) {
                             currentState = State.t3;
-                            drive.followTrajectoryAsync(t_C_3);
-                        }break;
-                    case t3://Drive back to zone C with second wobble goal
+                            drive.followTrajectoryAsync(t_C_2);
+                        }
+                        break;
+                    case t3://Drive up to Zone B to drop off first wobble goal
                         if(!drive.isBusy()){
-                            currentState = State.secondWobbleDrop;
-                            positionSet=false;
-                            timer = System.currentTimeMillis();
-                        }break;
-                    case secondWobbleDrop://Drop second wobble goal
-                        if(System.currentTimeMillis()-timer>1000){
+                            currentState = State.shoot2;
+                            drive.followTrajectoryAsync(t_C_3);
+                        }
+                        break;
+                    case shoot2:
+                        if(!drive.isBusy()){
                             currentState = State.t4;
+                            timer=System.currentTimeMillis();
+                        }
+                        break;
+                    case t4://Drive to shooting line
+                        if(System.currentTimeMillis()-timer>2500){
+                            currentState = State.t5;
                             drive.followTrajectoryAsync(t_C_4);
                         }break;
-                    case t4://Drive up to shooting line
+                    case t5:
                         if(!drive.isBusy()){
-                            currentState=State.shoot;
-                            timer=System.currentTimeMillis();
-                        }break;
-                    case shoot://Shoot three preloaded rings
-                        if(System.currentTimeMillis()-timer>5000) {
-                            currentState = State.t5;
+                            currentState = State.t6;
                             drive.followTrajectoryAsync(t_C_5);
-                        }break;
-                    case t5://Park on parking line
+                        }
+                        break;
+                    case t6:
+                        if(!drive.isBusy()){
+                            currentState = State.t7;
+                            drive.followTrajectoryAsync(t_C_6);
+                        }
+                        break;
+                    case t7:
                         if(!drive.isBusy()){
                             currentState = State.IDLE;
-                        }break;
+                            drive.followTrajectoryAsync(t_C_7);
+                        }
+                        break;
                     case IDLE:
                         break;
                 }
-                break;*/
+                break;
         }
-        if(currentState==State.shoot) shootRings();
+        if((currentState==State.t5 && set==Set.A) || (currentState==State.t1 && set==Set.B)) shootRings();
+        if(currentState==State.t4 && set==Set.B) shootOneRing();
         drive.update();
     }
 
@@ -321,9 +317,9 @@ public class AutoPath extends OpMode {
                 .addDisplacementMarker(0.8,0,()->{
                     drive.setWobbleArmPosition(grabberArmExtended);
                 })
-                .lineToLinearHeading(new Pose2d(0,-56, Math.toRadians(180)))
+                .lineToLinearHeading(new Pose2d(6,-60, Math.toRadians(180)))
                 .addDisplacementMarker(()->{
-                    grabWobble();
+                    releaseWobble();
                 })
                 .build();
         //Drop Wobble Goal
@@ -332,15 +328,16 @@ public class AutoPath extends OpMode {
                 .addDisplacementMarker(0.1,0,()->{
                     drive.setWobbleArmPosition(grabberArmRetracted);
                 })
-                .splineToLinearHeading(new Pose2d(-44,-50, Math.toRadians(270)), Math.toRadians(270))
+                .splineToLinearHeading(new Pose2d(-38,-50, Math.toRadians(270)), Math.toRadians(270))
                 .addDisplacementMarker(()->{
                     drive.setWobbleArmPosition(grabberArmExtended);
+                    releaseWobble();
                 })
                 .build();
         //Lower Wobble Goal Arm
         //Drive into Second Wobble Goal
         t_A_2 = drive.trajectoryBuilder(t_A_1.end())
-                .lineTo(new Vector2d(-44,-30))
+                .lineTo(new Vector2d(-38,-32))
                 .addDisplacementMarker(()->{
                     grabWobble();
                 })
@@ -351,103 +348,179 @@ public class AutoPath extends OpMode {
                 .addDisplacementMarker(0.1,0,()->{
                     drive.setWobbleArmPosition(grabberArmRetracted);
                 })
-                .addDisplacementMarker(0.9,0,()->{
+                .lineToLinearHeading(new Pose2d(0,-60, Math.toRadians(180)))
+                .addDisplacementMarker(0.9, 0, ()->{
                     drive.setWobbleArmPosition(grabberArmExtended);
                 })
-                .lineToLinearHeading(new Pose2d(-8,-60, Math.toRadians(180)))
                 .build();
         //Drop second wobble goal
         //Move to shooting line, lined up with goal
         t_A_4 = drive.trajectoryBuilder(t_A_3.end())
-                .lineToLinearHeading(new Pose2d(0,-36, 0))
+                .splineToLinearHeading(new Pose2d(6,-36, 0),Math.toRadians(90))
+                .addDisplacementMarker(0,0,()->{
+                    releaseWobble();
+                    drive.setWobbleArmPosition(grabberArmRetracted);
+                })
                 .build();
         //Shoot preloaded rings
         //Move to parking line
         t_A_5 = drive.trajectoryBuilder(t_A_4.end())
-                .lineTo(new Vector2d(16, -36))
+                .lineTo(new Vector2d(22, -36))
                 .build();
 
         //------------------------ 1 Ring -> Zone B -> Set B ------------------------
-        //Drive to Zone B, avoiding the pile of rings
-        /*t_B_0 = drive.trajectoryBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-24,-60, Math.toRadians(90)),0)
-                .splineToLinearHeading(new Pose2d(24, -36, Math.toRadians(180)),0)
+        //Strafe to the left and shoot three preloaded rings
+        t_B_0 = drive.trajectoryBuilder(startPose)
+                .strafeLeft(12)
+                .addDisplacementMarker(()->{
+                    shootRings();
+                })
                 .build();
-        //Drop Wobble Goal
-        //Drive to lined up with second Wobble Goal while avoiding pile of rings
-        t_B_1 = drive.trajectoryBuilder(t_B_0.end())
-                .splineTo(new Vector2d(0,0),0)
-                .splineTo(new Vector2d(-48,0),0)
+        //Strafe back to the right and drive toward intake, turning on the intake wheels
+        t_B_1 = drive.trajectoryBuilder(t_B_0.end(),true)
+                .strafeRight(12)
+                .splineToLinearHeading(new Pose2d(-30,-36,Math.toRadians(180)),0)
+                .addDisplacementMarker(0.7,0,()->{
+                    drive.intakeOn();
+                })
                 .build();
-        //Extend wobble goal arm
-        //Drive into wobble goal
+        //Continue forward to Zone B and drop off the wobble goal
         t_B_2 = drive.trajectoryBuilder(t_B_1.end())
-                .lineTo(new Vector2d(-48,-12))
+                .lineToLinearHeading(new Pose2d(36,-36,Math.toRadians(180)))
+                .addDisplacementMarker(0.5,0,()->{
+                    drive.intakeOff();
+                })
+                .addDisplacementMarker(0.8,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(1,0,()->{
+                    releaseWobble();
+                })
                 .build();
-        //Pick Up Wobble Goal
-        //Move back to zone B with grabbed Wobble Goal while avoiding rings
+        //Back up to shooting line and shoot the one ring
         t_B_3 = drive.trajectoryBuilder(t_B_2.end())
-                .splineToConstantHeading(new Vector2d(0,0), Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(36,-24),Math.toRadians(90))
-                .build();
-        //Drop second wobble goal
-        //Move to shooting line, lined up with goal
-        t_B_4 = drive.trajectoryBuilder(t_B_3.end())
                 .lineToLinearHeading(new Pose2d(0,-36,0))
+                .addDisplacementMarker(0,0,()->{
+                    drive.setWobbleArmPosition(grabberArmRetracted);
+                })
                 .build();
-        //Shoot Rings
-        //Move to parking line
-        t_B_5 = drive.trajectoryBuilder(t_A_4.end())
-                .lineTo(new Vector2d(10, -36))
+        //Back up to lined up with second wobble goal
+        t_B_4 = drive.trajectoryBuilder(t_B_3.end(),true)
+                .splineTo(new Vector2d(-24,-24),0)
+                .build();
+        //Back into wobble goal and grab it
+        t_B_5 = drive.trajectoryBuilder(t_B_4.end(),true)
+                .lineTo(new Vector2d(-40,-24))
+                .addDisplacementMarker(0,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(()->{
+                    grabWobble();
+                })
+                .build();
+        //Drive up to zone B and drop off second Wobble
+        t_B_6 = drive.trajectoryBuilder(t_B_5.end())
+                .lineToLinearHeading(new Pose2d(24,-36,Math.toRadians(180)))
+                .addDisplacementMarker(0.7,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(()->{
+                    releaseWobble();
+                })
+                .build();
+        //Park da robot
+        t_B_7 = drive.trajectoryBuilder(t_B_6.end())
+                .lineTo(new Vector2d(12,-36))
                 .build();
 
         //------------------------ 4 Rings -> Zone C -> Set C ------------------------
         //Drive to Zone C, avoiding the pile of rings
+        //Strafe to the left and shoot three preloaded rings
         t_C_0 = drive.trajectoryBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-24,-60, Math.toRadians(180)),Math.toRadians(180))
-                .lineTo(new Vector2d(48, -60))
+                .strafeLeft(12)
+                .addDisplacementMarker(()->{
+                    shootRings();
+                })
                 .build();
-        //Drop Wobble Goal
-        //Drive to lined up with second Wobble Goal while avoiding pile of rings
-        t_C_1 = drive.trajectoryBuilder(t_B_0.end())
-                .splineTo(new Vector2d(0,0),0)
-                .splineTo(new Vector2d(-48,0),0)
+        //Strafe back to the right and drive toward intake, turning on the intake wheels
+        t_C_1 = drive.trajectoryBuilder(t_C_0.end(),true)
+                .strafeRight(12)
+                .splineToLinearHeading(new Pose2d(-30,-36,Math.toRadians(180)),0)
+                .addDisplacementMarker(0.7,0,()->{
+                    drive.intakeOn();
+                })
                 .build();
-        //Extend wobble goal arm
-        //Drive into wobble goal
-        t_C_2 = drive.trajectoryBuilder(t_B_1.end())
-                .lineTo(new Vector2d(-48,-12))
+        //Continue forward to Zone B and drop off the wobble goal
+        t_C_2 = drive.trajectoryBuilder(t_C_1.end())
+                .lineToLinearHeading(new Pose2d(36,-36,Math.toRadians(180)))
+                .addDisplacementMarker(0.8,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(1,0,()->{
+                    releaseWobble();
+                })
                 .build();
-        //Pick Up Wobble Goal
-        //Move back to zone C with grabbed Wobble Goal while avoiding rings
-        t_C_3 = drive.trajectoryBuilder(t_B_2.end())
-                .splineToConstantHeading(new Vector2d(0,0), Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(60,-40),Math.toRadians(90))
-                .build();
-        //Drop second wobble goal
-        //Move to shooting line, lined up with goal
-        t_C_4 = drive.trajectoryBuilder(t_B_3.end())
+        //Back up to shooting line and shoot the one ring
+        t_C_3 = drive.trajectoryBuilder(t_C_2.end())
                 .lineToLinearHeading(new Pose2d(0,-36,0))
+                .addDisplacementMarker(0,0,()->{
+                    drive.setWobbleArmPosition(grabberArmRetracted);
+                })
+                .addDisplacementMarker(()->{
+                    shootOneRing();
+                })
                 .build();
-        //Shoot Rings
-        //Move to parking line
-        t_C_5 = drive.trajectoryBuilder(t_A_4.end())
-                .lineTo(new Vector2d(10, -36))
-                .build();*/
+        //Back up to lined up with second wobble goal
+        t_C_4 = drive.trajectoryBuilder(t_C_3.end(),true)
+                .splineTo(new Vector2d(-24,-24),0)
+                .build();
+        //Back into wobble goal and grab it
+        t_C_5 = drive.trajectoryBuilder(t_C_4.end(),true)
+                .lineTo(new Vector2d(-40,-24))
+                .addDisplacementMarker(0,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(()->{
+                    grabWobble();
+                })
+                .build();
+        //Drive up to zone B and drop off second Wobble
+        t_C_6 = drive.trajectoryBuilder(t_C_5.end())
+                .lineToLinearHeading(new Pose2d(24,-36,Math.toRadians(180)))
+                .addDisplacementMarker(0.7,0,()->{
+                    drive.setWobbleArmPosition(grabberArmExtended);
+                })
+                .addDisplacementMarker(()->{
+                    releaseWobble();
+                })
+                .build();
+        //Park da robot
+        t_C_7 = drive.trajectoryBuilder(t_C_6.end())
+                .lineTo(new Vector2d(12,-36))
+                .build();
     }
 
-    public void shootRings(){
-        if(System.currentTimeMillis()-timer<400 && drive.shooterLeft.getPower()==0) drive.setShooterSpeed(shooterSpeed);
-        if(System.currentTimeMillis()-timer>400 && System.currentTimeMillis()-timer<1200) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>1200 && System.currentTimeMillis()-timer<1600) drive.ringPusher.setPosition(0);
-        if(System.currentTimeMillis()-timer>1600 && System.currentTimeMillis()-timer<2400) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>2400 && System.currentTimeMillis()-timer<2800) drive.ringPusher.setPosition(0);
-        if(System.currentTimeMillis()-timer>2800 && System.currentTimeMillis()-timer<3600) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>3600) {
+    public void shootRings(){//takes abt 5 seconds
+        if(System.currentTimeMillis()-timer<800 && drive.shooterLeft.getPower()==0) drive.setShooterSpeed(shooterSpeed);
+        if(System.currentTimeMillis()-timer>800 && System.currentTimeMillis()-timer<1600) drive.ringPusher.setPosition(1);
+        if(System.currentTimeMillis()-timer>1600 && System.currentTimeMillis()-timer<2000) drive.ringPusher.setPosition(0);
+        if(System.currentTimeMillis()-timer>2000 && System.currentTimeMillis()-timer<2800) drive.ringPusher.setPosition(1);
+        if(System.currentTimeMillis()-timer>2800 && System.currentTimeMillis()-timer<3200) drive.ringPusher.setPosition(0);
+        if(System.currentTimeMillis()-timer>3200 && System.currentTimeMillis()-timer<4000) drive.ringPusher.setPosition(1);
+        if(System.currentTimeMillis()-timer>4000) {
             drive.ringPusher.setPosition(0);
             drive.setShooterSpeed(0);
         }
     }
+    public void shootOneRing(){//takes about 2.5 seconds
+        if(System.currentTimeMillis()-timer<800 && drive.shooterLeft.getPower()==0) drive.setShooterSpeed(shooterSpeed);
+        if(System.currentTimeMillis()-timer>800 && System.currentTimeMillis()-timer<1600) drive.ringPusher.setPosition(1);
+        if(System.currentTimeMillis()-timer>1600 && System.currentTimeMillis()-timer<2000) {
+            drive.ringPusher.setPosition(0);
+            drive.setShooterSpeed(0);
+        }
+    }
+
     /*public void dropWobbleGoal(long timer){
         if(System.currentTimeMillis()-timer<400 && !positionSet) {
             drive.setWobbleArmPosition(grabberArmExtended);

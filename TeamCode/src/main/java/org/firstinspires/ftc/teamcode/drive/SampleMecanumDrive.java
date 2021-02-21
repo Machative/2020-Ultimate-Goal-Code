@@ -146,9 +146,9 @@ public class SampleMecanumDrive extends MecanumDrive {
 
         ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
         wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
-        wobbleGrabber.setPosition(0);
+        wobbleGrabber.setPosition(1);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, shooterLeft, shooterRight,wobbleGrabberArm);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, wobbleGrabberArm);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -160,20 +160,13 @@ public class SampleMecanumDrive extends MecanumDrive {
         wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        if (RUN_USING_ENCODER) {
-            setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-
-        if (RUN_USING_ENCODER && MOTOR_VELO_PID != null) {
-            setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, MOTOR_VELO_PID);
-        }
+        shooterLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftRear.setDirection(DcMotorEx.Direction.FORWARD);
         intake.setDirection(DcMotorEx.Direction.REVERSE);
-        leftFront.setDirection(DcMotorEx.Direction.REVERSE);
-        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
         shooterLeft.setDirection(DcMotorEx.Direction.REVERSE);
+        shooterRight.setDirection(DcMotorEx.Direction.REVERSE);
 
         ringPusher.setPosition(0);
 
@@ -385,8 +378,8 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void setShooterSpeed(float power){
-        shooterLeft.setPower(power);
-        shooterRight.setPower(power);
+        shooterLeft.setVelocity(3073.4f*power);
+        shooterRight.setVelocity(0.8*3073.4f*power);
     }
     public void shooterOff(){
         shooterLeft.setPower(0);
@@ -395,6 +388,7 @@ public class SampleMecanumDrive extends MecanumDrive {
     public void intakeOn(){
         intake.setPower(1);
     }
+    public void intakeOff() {intake.setPower(0);}
     public void toggleIntake(){
         if(Math.abs(intake.getPower())!=1) intake.setPower(1);
         else intake.setPower(0);
