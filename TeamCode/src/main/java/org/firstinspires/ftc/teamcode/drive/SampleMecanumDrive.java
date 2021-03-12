@@ -58,8 +58,8 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDrive extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(8, 0, 0);
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(20, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(20, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1;
 
@@ -91,8 +91,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     //Motors
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
-    public DcMotorEx shooterLeft;
-    public DcMotorEx shooterRight;
+    public DcMotorEx shooter;
     public DcMotorEx intake;
     public Servo ringPusher;
     public DcMotorEx wobbleGrabberArm;
@@ -140,15 +139,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         rightFront = hardwareMap.get(DcMotorEx.class, "front_right");
 
         intake = hardwareMap.get(DcMotorEx.class, "intake");
-        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooter_left");
-        shooterRight = hardwareMap.get(DcMotorEx.class, "shooter_right");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
         wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
 
         ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
         wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
         wobbleGrabber.setPosition(1);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, wobbleGrabberArm);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, wobbleGrabberArm, shooter);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -158,15 +156,14 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooterLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+        leftFront.setDirection(DcMotorEx.Direction.REVERSE);
+        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
         leftRear.setDirection(DcMotorEx.Direction.FORWARD);
         intake.setDirection(DcMotorEx.Direction.REVERSE);
-        shooterLeft.setDirection(DcMotorEx.Direction.REVERSE);
-        shooterRight.setDirection(DcMotorEx.Direction.REVERSE);
+        shooter.setDirection(DcMotorEx.Direction.REVERSE);
 
         ringPusher.setPosition(0);
 
@@ -378,12 +375,10 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
 
     public void setShooterSpeed(float power){
-        shooterLeft.setVelocity(3073.4f*power);
-        shooterRight.setVelocity(0.8*3073.4f*power);
+        shooter.setPower(power);
     }
     public void shooterOff(){
-        shooterLeft.setPower(0);
-        shooterRight.setPower(0);
+        shooter.setPower(0);
     }
     public void intakeOn(){
         intake.setPower(1);

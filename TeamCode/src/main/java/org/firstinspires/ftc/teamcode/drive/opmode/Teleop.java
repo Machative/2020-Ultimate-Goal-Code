@@ -34,7 +34,7 @@ public class Teleop extends LinearOpMode {
     public static long dpaduptimer=0;
     public static boolean shooterOn=false;
 
-    float shooterpower=0.82f;
+    float shooterpower=1f;
     float wobbleArmSpeed=-50;
 
     public static boolean manualWobbleArm=false;
@@ -101,9 +101,9 @@ public class Teleop extends LinearOpMode {
                 shooterOn=!shooterOn;
                 ytimer2=System.currentTimeMillis();
             }
-            if(shooterOn){
+            if(shooterOn && drive.shooter.getPower()!=shooterpower){
                 drive.setShooterSpeed(shooterpower);
-            }else{
+            }else if(!shooterOn && drive.shooter.getPower()!=0f){
                 drive.shooterOff();
             }
             telemetry.addData("Shooter Power: ", Math.floor((shooterpower*100)+0.1f));
@@ -124,7 +124,7 @@ public class Teleop extends LinearOpMode {
                 servoTimer=System.currentTimeMillis();
                 rbtimer2 = System.currentTimeMillis();
             }
-            if(drive.ringPusher.getPosition()==1 && System.currentTimeMillis()-servoTimer>800) {
+            if(drive.ringPusher.getPosition()==1 && System.currentTimeMillis()-servoTimer>300) {
                 drive.ringPusher.setPosition(0);
             }
 

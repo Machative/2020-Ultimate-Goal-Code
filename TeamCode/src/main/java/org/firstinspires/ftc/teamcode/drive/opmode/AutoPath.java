@@ -52,7 +52,7 @@ public class AutoPath extends OpMode {
     long timer=0;
 
     private static int numRings=0;
-    private static final float shooterSpeed=0.52f;
+    private static final float shooterSpeed=0.92f;
     public SampleMecanumDrive drive;
 
     //Set A Trajectories
@@ -125,7 +125,7 @@ public class AutoPath extends OpMode {
         else if(numRings==1) set = Set.B;
         else if(numRings==4) set = Set.C;
     }
-
+    //2 inches from shooting line, 95 power for powershots
     @Override
     public void loop() {
         Pose2d poseEstimate = drive.getPoseEstimate();
@@ -170,7 +170,7 @@ public class AutoPath extends OpMode {
                             currentState=State.t5;
                         }break;
                     case t5:
-                        if(System.currentTimeMillis()-timer>5000){
+                        if(System.currentTimeMillis()-timer>5400){
                             currentState = State.IDLE;
                             drive.followTrajectoryAsync(t_A_5);
                         }break;
@@ -179,7 +179,7 @@ public class AutoPath extends OpMode {
                 }
                 break;
             case B:
-                switch(currentState){
+                /*switch(currentState){
                     case t0://Strafe left to shoot
                         drive.followTrajectoryAsync(t_B_0);
                         currentState=State.shoot1;
@@ -239,9 +239,9 @@ public class AutoPath extends OpMode {
                         break;
                     case IDLE:
                         break;
-                }
+                }*/
                 break;
-            case C:
+            case C:/*
                 switch(currentState){
                     case t0://Strafe left to shoot
                         drive.followTrajectoryAsync(t_C_0);
@@ -302,7 +302,7 @@ public class AutoPath extends OpMode {
                         break;
                     case IDLE:
                         break;
-                }
+                }*/
                 break;
         }
         if((currentState==State.t5 && set==Set.A) || (currentState==State.t1 && set==Set.B)) shootRings();
@@ -314,22 +314,22 @@ public class AutoPath extends OpMode {
         //------------------------ 0 Rings -> Zone A -> Set A ------------------------
         //Move from starting position to zone A with preloaded Wobble Goal
         t_A_0 = drive.trajectoryBuilder(startPose)
-                .addDisplacementMarker(0.8,0,()->{
+                .addDisplacementMarker(0.8, 0, () -> {
                     drive.setWobbleArmPosition(grabberArmExtended);
                 })
-                .lineToLinearHeading(new Pose2d(6,-60, Math.toRadians(180)))
-                .addDisplacementMarker(()->{
+                .lineToLinearHeading(new Pose2d(6, -60, Math.toRadians(180)))
+                .addDisplacementMarker(() -> {
                     releaseWobble();
                 })
                 .build();
         //Drop Wobble Goal
         //Move back to other wobble goal
         t_A_1 = drive.trajectoryBuilder(t_A_0.end())
-                .addDisplacementMarker(0.1,0,()->{
+                .addDisplacementMarker(0.1, 0, () -> {
                     drive.setWobbleArmPosition(grabberArmRetracted);
                 })
-                .splineToLinearHeading(new Pose2d(-38,-50, Math.toRadians(270)), Math.toRadians(270))
-                .addDisplacementMarker(()->{
+                .splineToLinearHeading(new Pose2d(-39, -50, Math.toRadians(270)), Math.toRadians(270))
+                .addDisplacementMarker(() -> {
                     drive.setWobbleArmPosition(grabberArmExtended);
                     releaseWobble();
                 })
@@ -337,40 +337,48 @@ public class AutoPath extends OpMode {
         //Lower Wobble Goal Arm
         //Drive into Second Wobble Goal
         t_A_2 = drive.trajectoryBuilder(t_A_1.end())
-                .lineTo(new Vector2d(-38,-32))
-                .addDisplacementMarker(()->{
+                .lineTo(new Vector2d(-39, -33))
+                .addDisplacementMarker(() -> {
                     grabWobble();
                 })
                 .build();
         //Pick Up Wobble Goal
         //Move back to zone A with grabbed Wobble Goal
         t_A_3 = drive.trajectoryBuilder(t_A_2.end(), true)
-                .addDisplacementMarker(0.1,0,()->{
+                .addDisplacementMarker(0.1, 0, () -> {
                     drive.setWobbleArmPosition(grabberArmRetracted);
                 })
-                .lineToLinearHeading(new Pose2d(0,-60, Math.toRadians(180)))
-                .addDisplacementMarker(0.9, 0, ()->{
+                .lineToLinearHeading(new Pose2d(0, -60, Math.toRadians(180)))
+                .addDisplacementMarker(0.9, 0, () -> {
                     drive.setWobbleArmPosition(grabberArmExtended);
                 })
                 .build();
         //Drop second wobble goal
         //Move to shooting line, lined up with goal
-        t_A_4 = drive.trajectoryBuilder(t_A_3.end())
-                .splineToLinearHeading(new Pose2d(6,-36, 0),Math.toRadians(90))
-                .addDisplacementMarker(0,0,()->{
+        /*t_A_4 = drive.trajectoryBuilder(t_A_3.end())
+                .addDisplacementMarker(() -> {
                     releaseWobble();
                     drive.setWobbleArmPosition(grabberArmRetracted);
                 })
+                .splineToLinearHeading(new Pose2d(-2, -39, 0), Math.toRadians(90))
+                .build();
+         */
+        t_A_4 = drive.trajectoryBuilder(t_A_3.end())
+                .addDisplacementMarker(() -> {
+                    releaseWobble();
+                    drive.setWobbleArmPosition(grabberArmRetracted);
+                })
+                .splineToLinearHeading(new Pose2d(-8, -32, 0), Math.toRadians(90))
                 .build();
         //Shoot preloaded rings
         //Move to parking line
         t_A_5 = drive.trajectoryBuilder(t_A_4.end())
-                .lineTo(new Vector2d(22, -36))
+                .lineTo(new Vector2d(18, -36))
                 .build();
 
         //------------------------ 1 Ring -> Zone B -> Set B ------------------------
         //Strafe to the left and shoot three preloaded rings
-        t_B_0 = drive.trajectoryBuilder(startPose)
+        /*t_B_0 = drive.trajectoryBuilder(startPose)
                 .strafeLeft(12)
                 .addDisplacementMarker(()->{
                     shootRings();
@@ -431,12 +439,12 @@ public class AutoPath extends OpMode {
         //Park da robot
         t_B_7 = drive.trajectoryBuilder(t_B_6.end())
                 .lineTo(new Vector2d(12,-36))
-                .build();
+                .build();*/
 
         //------------------------ 4 Rings -> Zone C -> Set C ------------------------
         //Drive to Zone C, avoiding the pile of rings
         //Strafe to the left and shoot three preloaded rings
-        t_C_0 = drive.trajectoryBuilder(startPose)
+        /*t_C_0 = drive.trajectoryBuilder(startPose)
                 .strafeLeft(12)
                 .addDisplacementMarker(()->{
                     shootRings();
@@ -497,25 +505,33 @@ public class AutoPath extends OpMode {
         //Park da robot
         t_C_7 = drive.trajectoryBuilder(t_C_6.end())
                 .lineTo(new Vector2d(12,-36))
-                .build();
+                .build();*/
     }
 
-    public void shootRings(){//takes abt 5 seconds
-        if(System.currentTimeMillis()-timer<800 && drive.shooterLeft.getPower()==0) drive.setShooterSpeed(shooterSpeed);
-        if(System.currentTimeMillis()-timer>800 && System.currentTimeMillis()-timer<1600) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>1600 && System.currentTimeMillis()-timer<2000) drive.ringPusher.setPosition(0);
-        if(System.currentTimeMillis()-timer>2000 && System.currentTimeMillis()-timer<2800) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>2800 && System.currentTimeMillis()-timer<3200) drive.ringPusher.setPosition(0);
-        if(System.currentTimeMillis()-timer>3200 && System.currentTimeMillis()-timer<4000) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>4000) {
+    public void shootRings() {//takes abt 5 seconds
+        if (System.currentTimeMillis() - timer < 1600 && drive.shooter.getPower() == 0)
+            drive.setShooterSpeed(shooterSpeed);
+        if (System.currentTimeMillis() - timer > 1600 && System.currentTimeMillis() - timer < 2400)
+            drive.ringPusher.setPosition(1);
+        if (System.currentTimeMillis() - timer > 2400 && System.currentTimeMillis() - timer < 3000)
+            drive.ringPusher.setPosition(0);
+        if (System.currentTimeMillis() - timer > 3000 && System.currentTimeMillis() - timer < 3800)
+            drive.ringPusher.setPosition(1);
+        if (System.currentTimeMillis() - timer > 3800 && System.currentTimeMillis() - timer < 4400)
+            drive.ringPusher.setPosition(0);
+        if (System.currentTimeMillis() - timer > 4400 && System.currentTimeMillis() - timer < 5200)
+            drive.ringPusher.setPosition(1);
+        if (System.currentTimeMillis() - timer > 5200) {
             drive.ringPusher.setPosition(0);
             drive.setShooterSpeed(0);
         }
     }
-    public void shootOneRing(){//takes about 2.5 seconds
-        if(System.currentTimeMillis()-timer<800 && drive.shooterLeft.getPower()==0) drive.setShooterSpeed(shooterSpeed);
-        if(System.currentTimeMillis()-timer>800 && System.currentTimeMillis()-timer<1600) drive.ringPusher.setPosition(1);
-        if(System.currentTimeMillis()-timer>1600 && System.currentTimeMillis()-timer<2000) {
+    public void shootOneRing() {//takes about 2.5 seconds
+        if (System.currentTimeMillis() - timer < 800 && drive.shooter.getPower() == 0)
+            drive.setShooterSpeed(shooterSpeed);
+        if (System.currentTimeMillis() - timer > 800 && System.currentTimeMillis() - timer < 1600)
+            drive.ringPusher.setPosition(1);
+        if (System.currentTimeMillis() - timer > 1600 && System.currentTimeMillis() - timer < 2000) {
             drive.ringPusher.setPosition(0);
             drive.setShooterSpeed(0);
         }
@@ -547,10 +563,10 @@ public class AutoPath extends OpMode {
             positionSet=true;
         }
     }*/
-    public void releaseWobble(){
+    public void releaseWobble() {
         drive.wobbleGrabber.setPosition(0.5);
     }
-    public void grabWobble(){
+    public void grabWobble() {
         drive.wobbleGrabber.setPosition(1);
     }
     private void initVuforia() {
@@ -570,5 +586,4 @@ public class AutoPath extends OpMode {
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
-
 }
