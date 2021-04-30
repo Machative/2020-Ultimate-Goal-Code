@@ -93,12 +93,21 @@ public class SampleMecanumDrive extends MecanumDrive {
     private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     public DcMotorEx shooter;
     public DcMotorEx intake;
-    public Servo ringPusher;
+    public DcMotorEx intake2;
     public DcMotorEx wobbleGrabberArm;
     private List<DcMotorEx> motors;
 
     //Servos
     public Servo wobbleGrabber;
+    public Servo ringPusher;
+
+    //Position Constants
+    public static final float ringPusher_retracted=0f;
+    public static final float ringPusher_extended=0.5f;
+    public static final float wobblegrabber_retracted=0f;
+    public static final float wobblegrabber_extended=0.6f;
+    public static final int grabberArmRetracted = -50;
+    public static final int grabberArmExtended = -285;
 
     private BNO055IMU imu;
     private VoltageSensor batteryVoltageSensor;
@@ -139,14 +148,15 @@ public class SampleMecanumDrive extends MecanumDrive {
         rightFront = hardwareMap.get(DcMotorEx.class, "front_right");
 
         intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake2 = hardwareMap.get(DcMotorEx.class, "intake2");
         shooter = hardwareMap.get(DcMotorEx.class, "shooter");
         wobbleGrabberArm = hardwareMap.get(DcMotorEx.class, "wobble_grabber_arm");
 
         ringPusher = hardwareMap.get(Servo.class, "ring_pusher");
         wobbleGrabber = hardwareMap.get(Servo.class, "wobble_grabber");
-        wobbleGrabber.setPosition(1);
+        wobbleGrabber.setPosition(wobblegrabber_retracted);
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, wobbleGrabberArm, shooter);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront, intake, intake2, wobbleGrabberArm, shooter);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -156,16 +166,13 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         wobbleGrabberArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         leftFront.setDirection(DcMotorEx.Direction.REVERSE);
-        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
-        leftRear.setDirection(DcMotorEx.Direction.FORWARD);
+        leftRear.setDirection(DcMotorEx.Direction.REVERSE);
         intake.setDirection(DcMotorEx.Direction.REVERSE);
-        shooter.setDirection(DcMotorEx.Direction.REVERSE);
-
-        ringPusher.setPosition(0);
+        ringPusher.setPosition(ringPusher_retracted);
 
         setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
     }
@@ -374,8 +381,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
     }
 
-    public void setShooterSpeed(float power){
-        shooter.setPower(power);
+    public void setShooterSpeed(float speed){
+        shooter.setPower(speed);
     }
     public void shooterOff(){
         shooter.setPower(0);
@@ -385,10 +392,16 @@ public class SampleMecanumDrive extends MecanumDrive {
     }
     public void intakeOff() {intake.setPower(0);}
     public void toggleIntake(){
-        if(Math.abs(intake.getPower())!=1) intake.setPower(1);
-        else intake.setPower(0);
+        if(Math.abs(intake.getPower())!=1) {
+            intake.setPower(1);
+            intake2.setPower(1);
+        }
+        else{
+            intake.setPower(0);
+            intake2.setPower(0);
+        }
     }
-    public void setIntakePower(float pow) {intake.setPower(pow);}
+    public void setIntakePower(float pow) {intake.setPower(pow); intake2.setPower(pow);}
 
     //Wobble Grabber
     public void setWobbleArmPosition(int pos){
@@ -401,7 +414,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         wobbleGrabberArm.setPower(pow);
     }
     public void toggleWobbleGrabber(){
-        wobbleGrabber.setPosition(wobbleGrabber.getPosition()==0.5?1:0.5);
+        wobbleGrabber.setPosition(wobbleGrabber.getPosition()==wobblegrabber_extended?wobblegrabber_retracted:wobblegrabber_extended);
     }
 
     @NonNull

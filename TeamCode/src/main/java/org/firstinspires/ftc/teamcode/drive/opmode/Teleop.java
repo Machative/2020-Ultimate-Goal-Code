@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import static org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive.grabberArmRetracted;
+import static org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive.grabberArmExtended;
 
 /**
  * This is a simple teleop routine for testing localization. Drive the robot around like a normal
@@ -34,11 +36,11 @@ public class Teleop extends LinearOpMode {
     public static long dpaduptimer=0;
     public static boolean shooterOn=false;
 
-    float shooterpower=1f;
-    float wobbleArmSpeed=-50;
+    float shooterspeed=0.9f;
+    float wobbleArmSpeed=20;
 
     public static boolean manualWobbleArm=false;
-    public static int wobbleArmPos=-30;
+    public static int wobbleArmPos=grabberArmRetracted;
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
@@ -101,31 +103,34 @@ public class Teleop extends LinearOpMode {
                 shooterOn=!shooterOn;
                 ytimer2=System.currentTimeMillis();
             }
-            if(shooterOn && drive.shooter.getPower()!=shooterpower){
-                drive.setShooterSpeed(shooterpower);
-            }else if(!shooterOn && drive.shooter.getPower()!=0f){
+            if(shooterOn){
+                drive.setShooterSpeed(shooterspeed);
+            }else if(!shooterOn){
                 drive.shooterOff();
             }
-            telemetry.addData("Shooter Power: ", Math.floor((shooterpower*100)+0.1f));
-            telemetry.addData("Wobble Arm Pos: ",drive.wobbleGrabberArm.getCurrentPosition());
+            telemetry.addData("Shooter Speed (setting): ", Math.floor(shooterspeed*100));
+            telemetry.addData("Shooter Speed (actual): ",(drive.shooter.getVelocity()*(60.0/103.6))/drive.shooter.getMotorType().getMaxRPM());
+            telemetry.addData("Wobble Arm (actual): ",drive.wobbleGrabberArm.getCurrentPosition());
+            telemetry.addData("Wobble Arm Position (expected): ",wobbleArmPos);
+            telemetry.addData("Wobble Arm Change: ",wobblearm);
 
             telemetry.update();
-            if(shooterDec && System.currentTimeMillis()-dpaddowntimer>250 && shooterpower>0f){
-                shooterpower-=0.01f;
+            if(shooterDec && System.currentTimeMillis()-dpaddowntimer>250 && shooterspeed>0f){
+                shooterspeed-=0.01f;
                 dpaddowntimer=System.currentTimeMillis();
-            } else if(shooterInc && System.currentTimeMillis()-dpaduptimer>250 && shooterpower<1.0f){
-                shooterpower+=0.01f;
+            } else if(shooterInc && System.currentTimeMillis()-dpaduptimer>250 && shooterspeed<1f){
+                shooterspeed+=0.01f;
                 dpaduptimer=System.currentTimeMillis();
             }
 
             //SHOOTER SERVO
             if(shoot && System.currentTimeMillis()-rbtimer2>250){
-                drive.ringPusher.setPosition(1);
+                drive.ringPusher.setPosition(SampleMecanumDrive.ringPusher_extended);
                 servoTimer=System.currentTimeMillis();
                 rbtimer2 = System.currentTimeMillis();
             }
-            if(drive.ringPusher.getPosition()==1 && System.currentTimeMillis()-servoTimer>300) {
-                drive.ringPusher.setPosition(0);
+            if(drive.ringPusher.getPosition()==SampleMecanumDrive.ringPusher_extended && System.currentTimeMillis()-servoTimer>300) {
+                drive.ringPusher.setPosition(SampleMecanumDrive.ringPusher_retracted);
             }
 
             //WOBBLE GRABBER
@@ -135,19 +140,15 @@ public class Teleop extends LinearOpMode {
             }
             //WOBBLE GRABBER ARM
             if(wobbleToggle && System.currentTimeMillis()-btimer2>250){
-                manualWobbleArm=false;
-                if(wobbleArmPos==-30) wobbleArmPos=-350;
-                else if(wobbleArmPos==-350) wobbleArmPos=-30;
+                if(Math.abs(wobbleArmPos-grabberArmExtended) < Math.abs(wobbleArmPos-grabberArmRetracted)) wobbleArmPos=grabberArmExtended;
+                else wobbleArmPos=grabberArmRetracted;
                 btimer2=System.currentTimeMillis();
             }
-            if(!manualWobbleArm) drive.setWobbleArmPosition(wobbleArmPos);
-
             //MANUAL WOBBLE GRABBER ARM CONTROL
-            if(wobblearm < -0.1 || wobblearm > 0.1) {
-                manualWobbleArm = true;
-                drive.setWobbleArmPosition(drive.wobbleGrabberArm.getCurrentPosition() + (int) (wobblearm * wobbleArmSpeed));
-                drive.wobbleGrabberArm.setPower(1);
+            if(Math.abs(wobblearm)>0.2f) {
+                wobbleArmPos += (int) (wobblearm * wobbleArmSpeed);
             }
+            drive.setWobbleArmPosition(wobbleArmPos);
         }
     }
 }
